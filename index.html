@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机音乐播放器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .player-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .music-info {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .current-music {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .music-status {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 80px;
+            font-size: 24px;
+        }
+
+        .btn-play:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-next {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-next:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .btn-stop {
+            background: #ff6b6b;
+            color: white;
+            padding: 30px 60px;
+            font-size: 24px;
+        }
+
+        .btn-stop:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .music-list {
+            margin-top: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .music-list h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .music-list ul {
+            list-style: none;
+        }
+
+        .music-list li {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .music-list li:hover {
+            background: #f9f9f9;
+        }
+
+        .music-list li:last-child {
+            border-bottom: none;
+        }
+
+        .music-list li.playing {
+            color: #764ba2;
+            font-weight: 600;
+            background: #f0f0f0;
+        }
+
+        @media (max-width: 600px) {
+            .player-container {
+                padding: 30px 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            button {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+
+        .volume-control {
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .volume-control label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .volume-control input[type="range"] {
+            width: 200px;
+            accent-color: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <h1>三水医院</h1>
+        
+        <div class="music-info">
+            <div class="current-music" id="currentMusic">准备播放</div>
+            <div class="music-status" id="musicStatus">点击播放开始</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-play" id="playBtn" onclick="playMusic()">播放</button>
+            <button class="btn-stop" onclick="stopMusic()">停止</button>
+        </div>
+
+        <div class="volume-control">
+            <label for="volume">音量：</label>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.7" onchange="changeVolume(this.value)">
+        </div>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        // ==========================================
+        // 在这里添加你的音乐链接
+        // ==========================================
+        const musicFiles = [
+            {
+                name: "赵海洋 - 贝加尔湖畔 (钢琴)",
+                url: "https://raw.githubusercontent.com/hh24562/miniature-fishstick/refs/heads/main/%E8%B5%B5%E6%B5%B7%E6%B4%8B%20-%20%E8%B4%9D%E5%8A%A0%E5%B0%94%E6%B9%96%E7%95%94%20(%E9%92%A2%E7%90%B4)%20%5Bmqms%5D.mp3"
+            }
+            // 添加更多音乐，格式如下：
+            // {
+            //     name: "歌曲名称",
+            //     url: "音乐链接"
+            // }
+        ];
+
+        // ==========================================
+        // 播放器逻辑
+        // ==========================================
+        let currentMusicIndex = -1;
+        let isPlaying = false;
+        const audioPlayer = document.getElementById('audioPlayer');
+        const currentMusicDisplay = document.getElementById('currentMusic');
+        const musicStatusDisplay = document.getElementById('musicStatus');
+        const playBtn = document.getElementById('playBtn');
+
+        // 播放音乐（按顺序播放）
+        function playMusic() {
+            if (musicFiles.length === 0) {
+                alert('请先添加音乐文件！');
+                return;
+            }
+
+            // 如果当前没有播放，从第一首开始
+            if (currentMusicIndex === -1) {
+                currentMusicIndex = 0;
+            }
+
+            playMusicAtIndex(currentMusicIndex);
+        }
+
+        // 播放指定位置的音乐
+        function playMusicAtIndex(index) {
+            const music = musicFiles[index];
+            audioPlayer.src = music.url;
+            audioPlayer.volume = document.getElementById('volume').value;
+            
+            audioPlayer.play()
+                .then(() => {
+                    currentMusicDisplay.textContent = music.name;
+                    musicStatusDisplay.textContent = '正在播放...';
+                    playBtn.textContent = '暂停';
+                    isPlaying = true;
+                })
+                .catch(error => {
+                    console.error('播放失败:', error);
+                    musicStatusDisplay.textContent = '播放失败，请检查音乐链接';
+                });
+        }
+
+        // 暂停/继续播放
+        function togglePlay() {
+            if (isPlaying) {
+                audioPlayer.pause();
+                playBtn.textContent = '播放';
+                musicStatusDisplay.textContent = '已暂停';
+                isPlaying = false;
+            } else {
+                if (currentMusicIndex !== -1) {
+                    audioPlayer.play();
+                    playBtn.textContent = '暂停';
+                    musicStatusDisplay.textContent = '正在播放...';
+                    isPlaying = true;
+                } else {
+                    playMusic();
+                }
+            }
+        }
+
+        // 停止播放
+        function stopMusic() {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            playBtn.textContent = '播放';
+            currentMusicDisplay.textContent = '准备播放';
+            musicStatusDisplay.textContent = '已停止';
+            isPlaying = false;
+            currentMusicIndex = -1;
+        }
+
+        // 改变音量
+        function changeVolume(value) {
+            audioPlayer.volume = value;
+        }
+
+        // 音乐播放结束自动播放下一首
+        audioPlayer.addEventListener('ended', () => {
+            if (currentMusicIndex < musicFiles.length - 1) {
+                currentMusicIndex++;
+            } else {
+                currentMusicIndex = 0; // 循环播放
+            }
+            playMusicAtIndex(currentMusicIndex);
+        });
+
+        // 播放按钮点击事件
+        playBtn.addEventListener('click', togglePlay);
+    </script>
+</body>
+</html>
